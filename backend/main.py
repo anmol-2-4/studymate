@@ -49,6 +49,10 @@ class SessionIn(BaseModel):
 
 
 def _dataset(name: str) -> str:
+    if not memory.is_connected():
+        raise HTTPException(503, "Cognee Cloud is not connected — put your "
+                                 "COGNEE_BASE_URL and COGNEE_API_KEY in .env "
+                                 "and restart (see .env.example)")
     dataset = store.dataset_of(name)
     if not dataset:
         raise HTTPException(404, "No such topic")
@@ -110,6 +114,8 @@ async def upload_notes(name: str, file: UploadFile):
     content = await file.read()
     if not content:
         raise HTTPException(422, "File is empty")
+    if len(content) > 8 * 1024 * 1024:
+        raise HTTPException(422, "File is larger than 8 MB — split it into smaller pieces")
     status = await memory.ingest_file(dataset, file.filename, content)
     store.bump_notes(name)
     return {"ok": True, "status": str(status), "filename": file.filename}

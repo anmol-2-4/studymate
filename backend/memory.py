@@ -84,14 +84,25 @@ def _entry_text(entry) -> str:
 async def _recall_text(dataset: str, query: str, system_prompt: str | None = None,
                        session_id: str | None = None,
                        include_references: bool = False) -> str:
-    results = await cognee.recall(
-        query,
-        datasets=[dataset],
-        top_k=10,
-        session_id=session_id,
-        system_prompt=system_prompt,
-        include_references=include_references,
-    )
+    # recall is read-only, so one retry on a transient cloud error is safe
+    for attempt in (1, 2):
+        try:
+            results = await cognee.recall(
+                query,
+                datasets=[dataset],
+                top_k=10,
+                session_id=session_id,
+                system_prompt=system_prompt,
+                include_references=include_references,
+            )
+            break
+        except RuntimeError as error:
+            # nothing ingested yet — not an error, just an empty memory
+            # (docs say 422; the cloud actually sends 404 with this message)
+            if "prerequisites not met" in str(error) or "(422)" in str(error):
+                return ""
+            if attempt == 2:
+                raise
     parts = [_entry_text(r) for r in results]
     return "\n".join(p for p in parts if p).strip()
 

@@ -112,3 +112,7 @@ forget — 14 checks.
 
 FastAPI · Cognee Cloud (Python SDK + REST) · vanilla JS, zero frontend
 dependencies.
+
+## License
+
+MIT — see [LICENSE](LICENSE).
