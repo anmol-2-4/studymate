@@ -52,14 +52,18 @@ def is_connected() -> bool:
 
 async def ingest_notes(topic: str, text: str):
     result = await cognee.remember(text, dataset_name=dataset_for(topic))
+    if isinstance(result, dict):
+        return result.get("status", "ok")
     return getattr(result, "status", "ok")
 
 
 # ---------- recall ----------
 
 def _entry_text(entry) -> str:
-    for attr in ("answer", "text", "content"):
-        value = getattr(entry, attr, None)
+    # Cloud recall returns plain dicts; local recall returns Pydantic objects.
+    get = entry.get if isinstance(entry, dict) else lambda k: getattr(entry, k, None)
+    for key in ("text", "answer", "content"):
+        value = get(key)
         if isinstance(value, str) and value.strip():
             return value
     return ""
@@ -73,7 +77,6 @@ async def _recall_text(topic: str, query: str, system_prompt: str | None = None,
         top_k=10,
         session_id=session_id,
         system_prompt=system_prompt,
-        feedback_influence=0.5,
     )
     parts = [_entry_text(r) for r in results]
     return "\n".join(p for p in parts if p).strip()
@@ -154,9 +157,17 @@ async def record_qa(topic: str, session_id: str, question: str, answer: str,
 
 
 # ---------- improve ----------
+# Cognee Cloud bridges session memory (QAEntry feedback) into the permanent
+# graph automatically in the background — there is no explicit improve()
+# endpoint. Finishing a session therefore reports the bridging status from the
+# sessions API rather than triggering enrichment.
 
-async def adapt(topic: str, session_id: str):
-    return await cognee.improve(dataset=dataset_for(topic), session_ids=[session_id])
+async def adapt(topic: str, session_id: str) -> dict:
+    async with _rest_client() as client:
+        response = await client.get(f"/api/v1/sessions/{session_id}")
+        if response.status_code == 200:
+            return response.json()
+    return {"status": "session feedback queued for background bridging"}
 
 
 # ---------- forget ----------
@@ -167,10 +178,18 @@ async def wipe(topic: str) -> dict:
 
 # ---------- graph visualization (Cloud REST) ----------
 
+def _rest_client() -> httpx.AsyncClient:
+    return httpx.AsyncClient(
+        base_url=BASE_URL,
+        headers={"X-Api-Key": API_KEY},
+        timeout=60,
+        follow_redirects=True,
+    )
+
+
 async def graph_html(topic: str) -> str | None:
-    headers = {"X-Api-Key": API_KEY, "Authorization": f"Bearer {API_KEY}"}
-    async with httpx.AsyncClient(base_url=BASE_URL, headers=headers, timeout=60) as client:
-        datasets = (await client.get("/api/v1/datasets")).json()
+    async with _rest_client() as client:
+        datasets = (await client.get("/api/v1/datasets/")).json()
         wanted = dataset_for(topic)
         dataset_id = next((d["id"] for d in datasets if d.get("name") == wanted), None)
         if not dataset_id:

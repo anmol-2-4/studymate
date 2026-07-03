@@ -30,14 +30,14 @@ are learning, then tutors you against it — and it remembers every session:
 | Answer questions from your notes | `recall(query, datasets=[topic], feedback_influence=0.5)` |
 | Generate & grade quiz questions | `recall()` with custom `system_prompt` (server-side LLM) |
 | Record every quiz answer | `remember(QAEntry(feedback_score=1..5), session_id=...)` — session memory |
-| Adapt to your weak spots | `improve(dataset, session_ids=[...])` — feedback weights bridge into the permanent graph |
+| Adapt to your weak spots | Cognee Cloud bridges session feedback into the permanent graph automatically; session status via `GET /api/v1/sessions/{id}` |
 | Wipe a topic | `forget(dataset=topic)` |
 | Visualize your knowledge | Cognee Cloud `GET /api/v1/visualize` |
 
 The adaptive loop is the point: wrong answers become low-score `QAEntry`
-feedback in session memory; `improve()` applies those feedback weights to the
-graph; subsequent `recall()` calls (with `feedback_influence > 0`) and quiz
-generation are steered toward exactly what you struggle with.
+feedback in session memory; Cognee Cloud bridges that feedback into the
+permanent graph in the background; subsequent quiz generation is steered
+toward exactly the concepts you struggle with.
 
 ## Running it
 
