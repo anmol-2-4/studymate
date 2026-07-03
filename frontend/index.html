@@ -42,6 +42,11 @@
   </aside>
 
   <main id="main">
+    <div id="page-head">
+      <a class="built-on" href="https://www.cognee.ai" target="_blank" rel="noopener">built on Cognee Cloud</a>
+      <span id="page-date"></span>
+    </div>
+
     <div id="empty-state">
       <h2>Your notes. Your weak spots.<br>A tutor that <span class="hl">remembers</span>.</h2>
       <p>StudyMate turns your own study material into a knowledge graph, quizzes
@@ -127,10 +132,18 @@
       <!-- GRAPH -->
       <section id="tab-graph" class="tab-panel hidden">
         <p class="hint">The actual knowledge graph Cognee built from your notes.</p>
-        <button id="btn-graph-load" class="primary">Load graph</button>
+        <div class="row">
+          <button id="btn-graph-load" class="primary">Load graph</button>
+          <span id="graph-status" class="status"></span>
+        </div>
         <iframe id="graph-frame" class="hidden" title="Knowledge graph"></iframe>
       </section>
     </div>
+
+    <footer id="page-foot">
+      <span>StudyMate — a tutor that remembers you</span>
+      <span class="verbs">remember · recall · adapt · forget</span>
+    </footer>
   </main>
 
   <div id="toast" class="hidden"></div>

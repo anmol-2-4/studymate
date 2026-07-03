@@ -101,13 +101,12 @@ with sync_playwright() as p:
     check("progress cards render", "WRONG" in page.text_content("#progress-cards").upper())
     check("weak spots tracked", "⚠️" in page.text_content("#weak-list"))
 
-    page.click('.tab[data-tab="graph"]')
-    page.click("#btn-graph-load")
+    page.click('.tab[data-tab="graph"]')  # opening the tab auto-loads the graph
     try:
         page.wait_for_selector("#graph-frame:not(.hidden)", timeout=180000)
-        check("graph loads", True)
+        check("graph auto-loads on tab open", True)
     except Exception:
-        check("graph loads", False)
+        check("graph auto-loads on tab open", False)
 
     page.once("dialog", lambda d: d.accept())
     page.click("#btn-forget")

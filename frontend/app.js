@@ -37,6 +37,12 @@ function busy(button, isBusy, label) {
   if (label) button.textContent = isBusy ? "…" : label;
 }
 
+// A status line with animated writing dots while the cloud works.
+function setStatus(el, text) {
+  el.textContent = text;
+  el.classList.toggle("working", Boolean(text));
+}
+
 /* ---------- connection status ---------- */
 
 async function refreshStatus() {
@@ -87,6 +93,10 @@ function selectTopic(name) {
   $("topic-title").textContent = name;
   $("chat-log").innerHTML = "";
   $("notes-log").innerHTML = "";
+  const frame = $("graph-frame");
+  frame.removeAttribute("srcdoc");
+  frame.classList.add("hidden");
+  $("btn-graph-load").textContent = "Load graph";
   resetQuizUI();
   showTab("notes");
   refreshTopics();
@@ -125,6 +135,9 @@ function showTab(name) {
   document.querySelectorAll(".tab-panel").forEach((p) =>
     p.classList.toggle("hidden", p.id !== `tab-${name}`));
   if (name === "progress") loadProgress();
+  if (name === "graph" && !$("graph-frame").srcdoc && !$("btn-graph-load").disabled) {
+    $("btn-graph-load").click();
+  }
 }
 document.querySelectorAll(".tab").forEach((t) => (t.onclick = () => showTab(t.dataset.tab)));
 
@@ -135,7 +148,7 @@ $("btn-save-notes").onclick = async () => {
   if (!text) return;
   const button = $("btn-save-notes");
   busy(button, true);
-  $("notes-status").textContent = "Building knowledge graph… (this can take a minute)";
+  setStatus($("notes-status"), "building your knowledge graph (can take a minute)");
   try {
     await api(`/topics/${encodeURIComponent(currentTopic)}/notes`, {
       method: "POST", body: JSON.stringify({ text }),
@@ -144,11 +157,11 @@ $("btn-save-notes").onclick = async () => {
     log.textContent = `✅ Remembered ${text.length} chars — ${new Date().toLocaleTimeString()}`;
     $("notes-log").prepend(log);
     $("notes-input").value = "";
-    $("notes-status").textContent = "";
+    setStatus($("notes-status"), "");
     toast("🧠 Notes stored in permanent graph memory");
     refreshTopics();
   } catch (err) {
-    $("notes-status").textContent = "";
+    setStatus($("notes-status"), "");
     toast(err.message);
   } finally { busy(button, false); }
 };
@@ -157,7 +170,7 @@ $("upload-label").onclick = () => $("file-input").click();
 $("file-input").onchange = async () => {
   const file = $("file-input").files[0];
   if (!file) return;
-  $("notes-status").textContent = `Uploading ${file.name} & building graph… (this can take a minute)`;
+  setStatus($("notes-status"), `uploading ${file.name} & building your graph (can take a minute)`);
   const form = new FormData();
   form.append("file", file);
   try {
@@ -168,11 +181,11 @@ $("file-input").onchange = async () => {
     const log = document.createElement("div");
     log.textContent = `✅ Remembered ${file.name} — ${new Date().toLocaleTimeString()}`;
     $("notes-log").prepend(log);
-    $("notes-status").textContent = "";
+    setStatus($("notes-status"), "");
     toast(`🧠 ${file.name} stored in permanent graph memory`);
     refreshTopics();
   } catch (err) {
-    $("notes-status").textContent = "";
+    setStatus($("notes-status"), "");
     toast(err.message);
   } finally { $("file-input").value = ""; }
 };
@@ -203,7 +216,10 @@ function renderAnswer(el, answer) {
   const summary = document.createElement("summary");
   summary.textContent = "📎 evidence from your notes";
   const body = document.createElement("div");
-  body.textContent = answer.slice(idx + "\nEvidence:".length).trim();
+  // full UUIDs drown the actual quoted note text — keep short refs
+  body.textContent = answer.slice(idx + "\nEvidence:".length).trim()
+    .replace(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/g,
+             (id) => id.slice(0, 8));
   details.append(summary, body);
   el.appendChild(details);
 }
@@ -214,7 +230,7 @@ $("btn-ask").onclick = async () => {
   if (!question) return;
   input.value = "";
   addMessage("user", question);
-  const thinking = addMessage("bot thinking", "recalling…");
+  const thinking = addMessage("bot thinking working", "recalling");
   try {
     const { answer } = await api(`/topics/${encodeURIComponent(currentTopic)}/ask`, {
       method: "POST",
@@ -277,7 +293,7 @@ $("btn-quiz-submit").onclick = async () => {
   if (!answer || !quizSession) return;
   const button = $("btn-quiz-submit");
   busy(button, true, "Submit answer");
-  $("quiz-feedback").innerHTML = `<div class="status">grading &amp; remembering…</div>`;
+  $("quiz-feedback").innerHTML = `<div class="status working">grading &amp; remembering</div>`;
   try {
     const data = await api(`/topics/${encodeURIComponent(currentTopic)}/quiz/answer`, {
       method: "POST",
@@ -394,7 +410,8 @@ async function loadProgress() {
 
 $("btn-graph-load").onclick = async () => {
   const button = $("btn-graph-load");
-  busy(button, true, "Load graph");
+  busy(button, true);
+  setStatus($("graph-status"), "drawing your knowledge graph");
   try {
     const response = await fetch(`/api/topics/${encodeURIComponent(currentTopic)}/graph`);
     if (!response.ok) throw new Error("Graph not ready — add notes first");
@@ -402,8 +419,12 @@ $("btn-graph-load").onclick = async () => {
     const frame = $("graph-frame");
     frame.classList.remove("hidden");
     frame.srcdoc = html;
+    button.textContent = "Reload graph";
   } catch (err) { toast(err.message); }
-  finally { busy(button, false, "Load graph"); }
+  finally {
+    busy(button, false);
+    setStatus($("graph-status"), "");
+  }
 };
 
 /* ---------- init ---------- */
@@ -411,3 +432,6 @@ $("btn-graph-load").onclick = async () => {
 refreshStatus();
 refreshTopics();
 setInterval(refreshStatus, 30000);
+$("page-date").textContent = new Date().toLocaleDateString(undefined, {
+  weekday: "short", month: "short", day: "numeric", year: "numeric",
+});

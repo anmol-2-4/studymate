@@ -6,6 +6,10 @@ Built on **[Cognee Cloud](https://www.cognee.ai/)** for the WeMakeDevs × Cognee
 hackathon *"The Hangover Part AI: Where's My Context?"* — **Best Build on Cognee
 Cloud** track.
 
+**🔴 Live demo:** https://llp-rainbow-profession-previews.trycloudflare.com —
+pre-loaded with an Operating Systems topic that already has a weak spot on
+record: start a quiz and watch it target what was missed last session.
+
 ![Adaptive quiz](docs/screenshots/quiz.png)
 
 ## The problem
@@ -60,6 +64,8 @@ permanent graph in the background; the next quiz session is steered toward
 exactly the concepts you struggle with — and lets go of them once you answer
 correctly. And it's not just asserted: ending a session reads your answers
 back **from the cloud** and shows the receipt, cloud IDs and all.
+
+![Cloud memory receipt](docs/screenshots/receipt.png)
 
 ## Architecture
 
