@@ -28,6 +28,11 @@ live Cognee Cloud, including a 15-check browser end-to-end suite.
 ## Links
 
 - Repo: https://github.com/anmol-2-4/studymate
+- Live demo: https://llp-rainbow-profession-previews.trycloudflare.com
+  _(Cloudflare quick tunnel from the dev machine — keep the laptop on and the
+  tunnel running through judging; if it drops, restart with
+  `~/.local/bin/cloudflared tunnel --url http://localhost:8300` and update
+  this URL + the README)_
 - Demo video: _(add after recording)_
 - Blog post: _(add after publishing docs/blog.md)_
 
