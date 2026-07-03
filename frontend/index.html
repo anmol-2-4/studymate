@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>StudyMate — a tutor that remembers you</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <aside id="sidebar">
+    <div class="brand">
+      <span class="logo">🧠</span>
+      <div>
+        <h1>StudyMate</h1>
+        <p class="tagline">a tutor that remembers you</p>
+      </div>
+    </div>
+
+    <div class="topic-add">
+      <input id="new-topic-name" type="text" placeholder="New topic, e.g. Operating Systems" maxlength="40">
+      <button id="btn-add-topic" title="Add topic">+</button>
+    </div>
+
+    <nav id="topic-list"></nav>
+
+    <footer>
+      <span id="conn-status" class="conn conn-unknown">checking…</span>
+      <span>powered by Cognee Cloud</span>
+    </footer>
+  </aside>
+
+  <main id="main">
+    <div id="empty-state">
+      <h2>🧠 Welcome to StudyMate</h2>
+      <p>Create a topic on the left, paste in your notes, and StudyMate builds a
+         knowledge graph of what <em>you</em> are studying.</p>
+      <p>Then ask it questions, take adaptive quizzes, and watch it learn where
+         you struggle — it remembers across every session.</p>
+    </div>
+
+    <div id="workspace" class="hidden">
+      <header id="topic-header">
+        <h2 id="topic-title"></h2>
+        <button id="btn-forget" class="danger" title="Erase this topic's memory (Cognee forget)">Forget topic</button>
+      </header>
+
+      <nav id="tabs">
+        <button class="tab active" data-tab="notes">📝 Notes</button>
+        <button class="tab" data-tab="ask">💬 Ask</button>
+        <button class="tab" data-tab="quiz">🎯 Quiz</button>
+        <button class="tab" data-tab="progress">📈 Progress</button>
+        <button class="tab" data-tab="graph">🕸️ Graph</button>
+      </nav>
+
+      <!-- NOTES -->
+      <section id="tab-notes" class="tab-panel">
+        <p class="hint">Paste lecture notes, textbook excerpts, or anything you're studying.
+           StudyMate ingests it into permanent graph memory (<code>remember</code>).</p>
+        <textarea id="notes-input" placeholder="Paste your study material here…"></textarea>
+        <div class="row">
+          <button id="btn-save-notes" class="primary">Remember this</button>
+          <span id="notes-status" class="status"></span>
+        </div>
+        <div id="notes-log"></div>
+      </section>
+
+      <!-- ASK -->
+      <section id="tab-ask" class="tab-panel hidden">
+        <div id="chat-log"></div>
+        <div class="row">
+          <input id="ask-input" type="text" placeholder="Ask anything about this topic…">
+          <button id="btn-ask" class="primary">Ask</button>
+        </div>
+      </section>
+
+      <!-- QUIZ -->
+      <section id="tab-quiz" class="tab-panel hidden">
+        <div id="quiz-idle">
+          <p class="hint">StudyMate quizzes you from <em>your own notes</em> and remembers every
+             answer. Wrong answers are fed back into the graph (<code>improve</code>) so the next
+             session targets your weak spots.</p>
+          <button id="btn-quiz-start" class="primary">Start quiz session</button>
+        </div>
+        <div id="quiz-active" class="hidden">
+          <div id="quiz-question-card">
+            <span id="quiz-qnum" class="badge"></span>
+            <p id="quiz-question"></p>
+          </div>
+          <textarea id="quiz-answer" placeholder="Your answer…" rows="3"></textarea>
+          <div class="row">
+            <button id="btn-quiz-submit" class="primary">Submit answer</button>
+            <button id="btn-quiz-end">Finish session &amp; adapt</button>
+          </div>
+          <div id="quiz-feedback"></div>
+        </div>
+        <div id="quiz-summary" class="hidden"></div>
+      </section>
+
+      <!-- PROGRESS -->
+      <section id="tab-progress" class="tab-panel hidden">
+        <div id="progress-cards"></div>
+        <h3>Weak spots StudyMate is tracking</h3>
+        <ul id="weak-list"></ul>
+        <h3>Session history</h3>
+        <ul id="session-list"></ul>
+      </section>
+
+      <!-- GRAPH -->
+      <section id="tab-graph" class="tab-panel hidden">
+        <p class="hint">This is the actual knowledge graph Cognee built from your notes.</p>
+        <button id="btn-graph-load" class="primary">Load graph</button>
+        <iframe id="graph-frame" class="hidden" title="Knowledge graph"></iframe>
+      </section>
+    </div>
+  </main>
+
+  <div id="toast" class="hidden"></div>
+  <script src="app.js"></script>
+</body>
+</html>
