@@ -438,6 +438,28 @@ button.danger:hover { background: rgba(214, 69, 69, 0.06); }
 
 /* ---------- quiz: the flashcard ---------- */
 
+/* the "it remembers you" callout that opens an adaptive session */
+#memory-note {
+  background: var(--paper-raised);
+  border: 1px solid var(--rule);
+  border-left: 4px solid var(--highlighter);
+  border-radius: 6px;
+  padding: 13px 18px;
+  margin-bottom: 16px;
+  font-size: 14.5px;
+  line-height: 1.6;
+}
+#memory-note .mn-eyebrow {
+  display: block;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  margin-bottom: 5px;
+}
+#memory-note strong.hl { font-weight: 600; }
+
 #quiz-question-card {
   background: var(--paper-raised);
   border: 1px solid var(--rule);

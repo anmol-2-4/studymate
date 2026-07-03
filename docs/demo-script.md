@@ -40,9 +40,10 @@ store (delete `data/store.json` and forget old topics first).
 ## 1:50 — The climax: it remembers you
 
 - Open **Progress**: point at the weak-spots list. "It knows what I'm bad at."
-- Start **quiz session 2**. Point at the 🎯 **targeting badge**:
-  "New session — and it opens by attacking exactly what I missed last time.
-  No AI tutor I've used does this."
+- Start **quiz session 2**. Point at the 🧠 **session memory** callout above
+  the question ("last time you struggled with…") and the 🎯 targeting badge:
+  "New session — and it opens by telling me it remembers, then attacks exactly
+  what I missed last time. No AI tutor I've used does this."
 - Answer the targeted question CORRECTLY this time. Finish session.
 - Progress again: the mastered concept has **dropped off the weak list**.
   "…and once I get it right, it lets go. That's a real feedback loop, not a

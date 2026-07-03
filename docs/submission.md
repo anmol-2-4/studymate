@@ -23,16 +23,11 @@ session opens by attacking your tracked weak spots, and lets go of a concept
 once you answer it correctly. Progress, session history, an embedded
 interactive view of your actual knowledge graph, and a one-click `forget`
 complete the memory lifecycle. Ships with two test harnesses that run against
-live Cognee Cloud, including a 15-check browser end-to-end suite.
+live Cognee Cloud, including a 16-check browser end-to-end suite.
 
 ## Links
 
 - Repo: https://github.com/anmol-2-4/studymate
-- Live demo: https://llp-rainbow-profession-previews.trycloudflare.com
-  _(Cloudflare quick tunnel from the dev machine — keep the laptop on and the
-  tunnel running through judging; if it drops, restart with
-  `~/.local/bin/cloudflared tunnel --url http://localhost:8300` and update
-  this URL + the README)_
 - Demo video: _(add after recording)_
 - Blog post: _(add after publishing docs/blog.md)_
 

@@ -91,6 +91,9 @@ with sync_playwright() as p:
 
     page.click("#btn-quiz-start")
     page.wait_for_selector("#quiz-active:not(.hidden)", timeout=180000)
+    check("session-memory callout on session 2",
+          not page.query_selector("#memory-note").get_attribute("class").count("hidden")
+          and "struggled with" in page.text_content("#memory-note"))
     check("adaptive targeting badge on session 2",
           page.query_selector(".badge.target") is not None)
     page.click("#btn-quiz-end")

@@ -272,6 +272,21 @@ function showQuestion(question, targeting) {
   $("quiz-answer").focus();
 }
 
+// The hero moment: a new session that opens by remembering what you missed.
+function showMemoryNote(targeting) {
+  const note = $("memory-note");
+  if (!targeting || !targeting.length) {
+    note.classList.add("hidden");
+    return;
+  }
+  note.innerHTML = `<span class="mn-eyebrow">🧠 session memory</span>` +
+    `Picking up where you left off — last time you struggled with ` +
+    targeting.map(() => `<strong class="hl"></strong>`).join(", ") +
+    `. This session starts there.`;
+  note.querySelectorAll("strong.hl").forEach((el, i) => (el.textContent = targeting[i]));
+  note.classList.remove("hidden");
+}
+
 $("btn-quiz-start").onclick = async () => {
   const button = $("btn-quiz-start");
   busy(button, true, "Start quiz session");
@@ -282,8 +297,8 @@ $("btn-quiz-start").onclick = async () => {
     $("quiz-idle").classList.add("hidden");
     $("quiz-active").classList.remove("hidden");
     $("quiz-summary").classList.add("hidden");
+    showMemoryNote(data.targeting);
     showQuestion(data.question, data.targeting);
-    if (data.targeting.length) toast(`This session targets your weak spots: ${data.targeting.join(", ")}`);
   } catch (err) { toast(err.message); }
   finally { busy(button, false, "Start quiz session"); }
 };
