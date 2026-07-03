@@ -94,11 +94,14 @@ QUIZ_PROMPT = (
     "no numbering."
 )
 
+# The recall pipeline uses query_text for retrieval only, so the student's
+# answer must travel inside the system prompt or the grader never sees it.
 GRADE_PROMPT = (
     "You are grading a student's short answer using the provided context from "
-    "their study notes as the source of truth. Respond with ONLY a JSON object: "
-    '{"correct": true|false, "explanation": "<one- or two-sentence explanation '
-    'with the right answer>", "concept": "<2-4 word name of the concept tested>"}'
+    'their study notes as the source of truth. The question was: "{question}". '
+    'The student answered: "{answer}". Respond with ONLY a JSON object: '
+    '{{"correct": true|false, "explanation": "<one- or two-sentence explanation '
+    'with the right answer>", "concept": "<2-4 word name of the concept tested>"}}'
 )
 
 
@@ -119,8 +122,11 @@ async def quiz_question(topic: str, avoid: list[str], weak_concepts: list[str]) 
 async def grade_answer(topic: str, question: str, answer: str) -> dict:
     raw = await _recall_text(
         topic,
-        f"Question: {question}\nStudent's answer: {answer}",
-        system_prompt=GRADE_PROMPT,
+        question,
+        system_prompt=GRADE_PROMPT.format(
+            question=question.replace('"', "'"),
+            answer=answer.replace('"', "'"),
+        ),
     )
     match = re.search(r"\{.*\}", raw, re.DOTALL)
     if match:

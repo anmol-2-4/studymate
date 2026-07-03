@@ -252,12 +252,13 @@ $("btn-quiz-end").onclick = async () => {
     });
     const s = data.session;
     $("quiz-active").classList.add("hidden");
+    $("quiz-idle").classList.remove("hidden");
     $("quiz-summary").classList.remove("hidden");
     $("quiz-summary").innerHTML =
       `<strong>Session complete 🧠</strong><br>` +
       `Score: ${s.correct} correct · ${s.wrong} wrong<br>` +
-      `Your answers were bridged into permanent memory with <code>improve()</code> — ` +
-      `StudyMate re-weighted the graph around what you missed.<br>` +
+      `Your answers were recorded as graded feedback in session memory — ` +
+      `Cognee Cloud is bridging them into your permanent knowledge graph.<br>` +
       (data.weak_concepts.length
         ? `Next session will target: <strong>${data.weak_concepts.join(", ")}</strong>`
         : `No weak spots on record — nice work!`);

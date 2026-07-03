@@ -87,6 +87,10 @@ def start_session(name: str, session_id: str):
         _save(state)
 
 
+def _concept_key(concept: str) -> str:
+    return concept.strip().lower().rstrip("s")
+
+
 def record_result(name: str, session_id: str, question: str, correct: bool, concept: str):
     with _lock:
         state = _load()
@@ -100,7 +104,10 @@ def record_result(name: str, session_id: str, question: str, correct: bool, conc
             topic["missed"] = topic["missed"][-50:]
         elif concept:
             # mastered it — stop treating this concept as a weak spot
-            topic["missed"] = [m for m in topic["missed"] if m["concept"] != concept]
+            topic["missed"] = [
+                m for m in topic["missed"]
+                if _concept_key(m["concept"]) != _concept_key(concept)
+            ]
         _save(state)
 
 
@@ -118,9 +125,9 @@ def weak_concepts(name: str, limit: int = 5) -> list[str]:
     topic = get_topic(name)
     if not topic:
         return []
-    seen: list[str] = []
+    seen: dict[str, str] = {}
     for miss in reversed(topic["missed"]):
-        concept = miss.get("concept") or ""
-        if concept and concept not in seen:
-            seen.append(concept)
-    return seen[:limit]
+        concept = (miss.get("concept") or "").strip()
+        if concept and _concept_key(concept) not in seen:
+            seen[_concept_key(concept)] = concept
+    return list(seen.values())[:limit]
