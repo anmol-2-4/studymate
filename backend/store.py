@@ -5,7 +5,9 @@ needs instantly (scores, session history, weak concepts).
 """
 
 import json
+import re
 import threading
+import uuid
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -53,10 +55,20 @@ def add_topic(name: str):
     with _lock:
         state = _load()
         if name not in state["topics"]:
+            # Dataset names get a unique suffix: Cognee Cloud leaves a forgotten
+            # dataset's record in a state that rejects re-ingestion under the
+            # same name, so a re-created topic must never reuse one.
+            slug = re.sub(r"[^a-z0-9]+", "_", name.lower()).strip("_")
             state["topics"][name] = {
-                "created": _now(), "notes": 0, "sessions": [], "missed": []
+                "created": _now(), "notes": 0, "sessions": [], "missed": [],
+                "dataset": f"studymate_{slug}_{uuid.uuid4().hex[:6]}",
             }
             _save(state)
+
+
+def dataset_of(name: str) -> str | None:
+    topic = get_topic(name)
+    return topic.get("dataset") if topic else None
 
 
 def remove_topic(name: str):

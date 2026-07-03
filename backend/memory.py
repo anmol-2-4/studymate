@@ -22,11 +22,6 @@ API_KEY = os.getenv("COGNEE_API_KEY", "")
 _connected = False
 
 
-def dataset_for(topic: str) -> str:
-    slug = re.sub(r"[^a-z0-9]+", "_", topic.lower()).strip("_")
-    return f"studymate_{slug}"
-
-
 async def connect() -> bool:
     global _connected
     if _connected:
@@ -59,16 +54,16 @@ class _NamedBytesIO(io.BytesIO):
         self.name = name
 
 
-async def ingest_file(topic: str, filename: str, content: bytes):
+async def ingest_file(dataset: str, filename: str, content: bytes):
     fileobj = _NamedBytesIO(content, filename)
-    result = await cognee.remember(fileobj, dataset_name=dataset_for(topic))
+    result = await cognee.remember(fileobj, dataset_name=dataset)
     if isinstance(result, dict):
         return result.get("status", "ok")
     return getattr(result, "status", "ok")
 
 
-async def ingest_notes(topic: str, text: str):
-    result = await cognee.remember(text, dataset_name=dataset_for(topic))
+async def ingest_notes(dataset: str, text: str):
+    result = await cognee.remember(text, dataset_name=dataset)
     if isinstance(result, dict):
         return result.get("status", "ok")
     return getattr(result, "status", "ok")
@@ -86,12 +81,12 @@ def _entry_text(entry) -> str:
     return ""
 
 
-async def _recall_text(topic: str, query: str, system_prompt: str | None = None,
+async def _recall_text(dataset: str, query: str, system_prompt: str | None = None,
                        session_id: str | None = None,
                        include_references: bool = False) -> str:
     results = await cognee.recall(
         query,
-        datasets=[dataset_for(topic)],
+        datasets=[dataset],
         top_k=10,
         session_id=session_id,
         system_prompt=system_prompt,
@@ -109,8 +104,8 @@ ASK_PROMPT = (
 )
 
 
-async def ask(topic: str, question: str, session_id: str | None = None) -> str:
-    answer = await _recall_text(topic, question, session_id=session_id,
+async def ask(dataset: str, question: str, session_id: str | None = None) -> str:
+    answer = await _recall_text(dataset, question, session_id=session_id,
                                 system_prompt=ASK_PROMPT,
                                 include_references=True)
     return answer or "I couldn't find anything about that in your notes yet."
@@ -134,29 +129,35 @@ GRADE_PROMPT = (
 )
 
 
-async def quiz_question(topic: str, avoid: list[str], weak_concepts: list[str]) -> str:
+async def quiz_question(dataset: str, avoid: list[str], weak_concepts: list[str]) -> str:
     focus = (
         f"the concepts the student previously got wrong: {', '.join(weak_concepts)}"
         if weak_concepts else "the most important concepts, definitions and facts"
     )
-    query = f"Test me on {focus} in {topic}."
+    query = f"Test me on {focus}."
     prompt = QUIZ_PROMPT
     if avoid:
         prompt += " Do NOT ask about the same thing as any of these already-asked questions: "
         prompt += " | ".join(avoid[-8:])
-    question = await _recall_text(topic, query, system_prompt=prompt)
+    question = await _recall_text(dataset, query, system_prompt=prompt)
     return question
 
 
-async def grade_answer(topic: str, question: str, answer: str) -> dict:
-    raw = await _recall_text(
-        topic,
-        question,
-        system_prompt=GRADE_PROMPT.format(
-            question=question.replace('"', "'"),
-            answer=answer.replace('"', "'"),
-        ),
+async def grade_answer(dataset: str, question: str, answer: str,
+                       known_concepts: list[str] | None = None) -> dict:
+    prompt = GRADE_PROMPT.format(
+        question=question.replace('"', "'"),
+        answer=answer.replace('"', "'"),
     )
+    if known_concepts:
+        # Keep concept names stable across sessions so mastery tracking can
+        # match a correct answer back to the weak spot it resolves.
+        prompt += (
+            " If the concept tested is one of these already-tracked concepts, "
+            "use exactly that name for the concept field: "
+            + "; ".join(known_concepts[:10])
+        )
+    raw = await _recall_text(dataset, question, system_prompt=prompt)
     match = re.search(r"\{.*\}", raw, re.DOTALL)
     if match:
         try:
@@ -178,7 +179,7 @@ async def grade_answer(topic: str, question: str, answer: str) -> dict:
 
 # ---------- session memory (quiz answers) ----------
 
-async def record_qa(topic: str, session_id: str, question: str, answer: str,
+async def record_qa(dataset: str, session_id: str, question: str, answer: str,
                     context: str, correct: bool):
     entry = cognee.QAEntry(
         type="qa",
@@ -188,7 +189,7 @@ async def record_qa(topic: str, session_id: str, question: str, answer: str,
         feedback_text="correct answer" if correct else "student answered incorrectly — weak spot",
         feedback_score=5 if correct else 1,
     )
-    await cognee.remember(entry, dataset_name=dataset_for(topic), session_id=session_id)
+    await cognee.remember(entry, dataset_name=dataset, session_id=session_id)
 
 
 # ---------- improve ----------
@@ -197,7 +198,7 @@ async def record_qa(topic: str, session_id: str, question: str, answer: str,
 # endpoint. Finishing a session therefore reports the bridging status from the
 # sessions API rather than triggering enrichment.
 
-async def adapt(topic: str, session_id: str) -> dict:
+async def adapt(session_id: str) -> dict:
     async with _rest_client() as client:
         response = await client.get(f"/api/v1/sessions/{session_id}")
         if response.status_code == 200:
@@ -207,8 +208,8 @@ async def adapt(topic: str, session_id: str) -> dict:
 
 # ---------- forget ----------
 
-async def wipe(topic: str) -> dict:
-    return await cognee.forget(dataset=dataset_for(topic))
+async def wipe(dataset: str) -> dict:
+    return await cognee.forget(dataset=dataset)
 
 
 # ---------- graph visualization (Cloud REST) ----------
@@ -222,11 +223,10 @@ def _rest_client() -> httpx.AsyncClient:
     )
 
 
-async def graph_html(topic: str) -> str | None:
+async def graph_html(dataset: str) -> str | None:
     async with _rest_client() as client:
         datasets = (await client.get("/api/v1/datasets/")).json()
-        wanted = dataset_for(topic)
-        dataset_id = next((d["id"] for d in datasets if d.get("name") == wanted), None)
+        dataset_id = next((d["id"] for d in datasets if d.get("name") == dataset), None)
         if not dataset_id:
             return None
         response = await client.get("/api/v1/visualize", params={"dataset_id": dataset_id})

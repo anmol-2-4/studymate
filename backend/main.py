@@ -48,6 +48,13 @@ class SessionIn(BaseModel):
     session_id: str
 
 
+def _dataset(name: str) -> str:
+    dataset = store.dataset_of(name)
+    if not dataset:
+        raise HTTPException(404, "No such topic")
+    return dataset
+
+
 @app.get("/api/status")
 async def status():
     return {"connected": memory.is_connected()}
@@ -69,29 +76,24 @@ async def create_topic(body: TopicIn):
 
 @app.delete("/api/topics/{name}")
 async def forget_topic(name: str):
-    if not store.get_topic(name):
-        raise HTTPException(404, "No such topic")
-    result = await memory.wipe(name)
+    result = await memory.wipe(_dataset(name))
     store.remove_topic(name)
     return {"ok": True, "forgotten": result}
 
 
 @app.post("/api/topics/{name}/notes")
 async def add_notes(name: str, body: NotesIn):
-    if not store.get_topic(name):
-        raise HTTPException(404, "No such topic")
+    dataset = _dataset(name)
     if not body.text.strip():
         raise HTTPException(422, "Notes text is empty")
-    status = await memory.ingest_notes(name, body.text.strip())
+    status = await memory.ingest_notes(dataset, body.text.strip())
     store.bump_notes(name)
     return {"ok": True, "status": str(status)}
 
 
 @app.post("/api/topics/{name}/ask")
 async def ask(name: str, body: AskIn):
-    if not store.get_topic(name):
-        raise HTTPException(404, "No such topic")
-    answer = await memory.ask(name, body.question, session_id=body.session_id)
+    answer = await memory.ask(_dataset(name), body.question, session_id=body.session_id)
     return {"answer": answer}
 
 
@@ -100,8 +102,7 @@ ALLOWED_UPLOADS = {".pdf", ".txt", ".md", ".csv", ".json"}
 
 @app.post("/api/topics/{name}/upload")
 async def upload_notes(name: str, file: UploadFile):
-    if not store.get_topic(name):
-        raise HTTPException(404, "No such topic")
+    dataset = _dataset(name)
     suffix = ("." + file.filename.rsplit(".", 1)[-1].lower()) if "." in file.filename else ""
     if suffix not in ALLOWED_UPLOADS:
         raise HTTPException(422, f"Unsupported file type {suffix or '(none)'} — "
@@ -109,19 +110,18 @@ async def upload_notes(name: str, file: UploadFile):
     content = await file.read()
     if not content:
         raise HTTPException(422, "File is empty")
-    status = await memory.ingest_file(name, file.filename, content)
+    status = await memory.ingest_file(dataset, file.filename, content)
     store.bump_notes(name)
     return {"ok": True, "status": str(status), "filename": file.filename}
 
 
 @app.post("/api/topics/{name}/quiz/start")
 async def quiz_start(name: str):
-    if not store.get_topic(name):
-        raise HTTPException(404, "No such topic")
+    dataset = _dataset(name)
     session_id = f"quiz_{uuid.uuid4().hex[:12]}"
     store.start_session(name, session_id)
     weak = store.weak_concepts(name)
-    question = await memory.quiz_question(name, avoid=[], weak_concepts=weak)
+    question = await memory.quiz_question(dataset, avoid=[], weak_concepts=weak)
     if not question:
         raise HTTPException(409, "No study material yet — add notes first")
     return {"session_id": session_id, "question": question, "targeting": weak}
@@ -129,18 +129,18 @@ async def quiz_start(name: str):
 
 @app.post("/api/topics/{name}/quiz/answer")
 async def quiz_answer(name: str, body: AnswerIn):
-    if not store.get_topic(name):
-        raise HTTPException(404, "No such topic")
-    graded = await memory.grade_answer(name, body.question, body.answer)
+    dataset = _dataset(name)
+    graded = await memory.grade_answer(dataset, body.question, body.answer,
+                                       known_concepts=store.weak_concepts(name))
     await memory.record_qa(
-        name, body.session_id, body.question, body.answer,
+        dataset, body.session_id, body.question, body.answer,
         context=graded["explanation"], correct=graded["correct"],
     )
     store.record_result(name, body.session_id, body.question,
                         graded["correct"], graded["concept"])
     asked = _asked_questions(name, body.session_id, body.question)
     weak = store.weak_concepts(name)
-    next_question = await memory.quiz_question(name, avoid=asked, weak_concepts=weak)
+    next_question = await memory.quiz_question(dataset, avoid=asked, weak_concepts=weak)
     return {**graded, "next_question": next_question, "targeting": weak}
 
 
@@ -156,9 +156,8 @@ def _asked_questions(name: str, session_id: str, question: str) -> list[str]:
 
 @app.post("/api/topics/{name}/quiz/finish")
 async def quiz_finish(name: str, body: SessionIn):
-    if not store.get_topic(name):
-        raise HTTPException(404, "No such topic")
-    await memory.adapt(name, body.session_id)
+    _dataset(name)
+    await memory.adapt(body.session_id)
     store.mark_adapted(name, body.session_id)
     _session_questions.pop(body.session_id, None)
     topic = store.get_topic(name)
@@ -181,9 +180,7 @@ async def progress(name: str):
 
 @app.get("/api/topics/{name}/graph")
 async def graph(name: str):
-    if not store.get_topic(name):
-        raise HTTPException(404, "No such topic")
-    html = await memory.graph_html(name)
+    html = await memory.graph_html(_dataset(name))
     if not html:
         raise HTTPException(404, "Graph not available yet — add notes first")
     return HTMLResponse(html)

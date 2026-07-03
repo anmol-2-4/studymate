@@ -58,5 +58,19 @@ store (delete `data/store.json` and forget old topics first).
 - [ ] `data/store.json` deleted, old topics forgotten (clean sidebar)
 - [ ] Cloud connected (green dot bottom-left)
 - [ ] `demo/operating-systems.md` ready to upload
-- [ ] Do a full dry run first — ingestion takes ~30–60 s on camera; either cut
-      it or narrate the graph pipeline over it
+- [ ] Answer session 2's targeted question COMPLETELY — if it asks for a
+      definition AND an example, give both, or the strict grader marks it
+      wrong and the weak spot won't drop off
+
+## Observed latencies (from dry run — plan cuts or narration over these)
+
+| Step | Wait |
+|---|---|
+| Upload + graph build | ~25–40 s |
+| Graph tab load | ~9 s |
+| Ask answer | ~5–8 s |
+| Quiz start / next question | ~10–17 s |
+| Grading an answer | ~15–35 s |
+| Finish session / forget | ~2 s |
+
+Total waiting across the whole demo ≈ 2 min — record long, cut to 2:30.

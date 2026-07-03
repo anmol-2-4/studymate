@@ -6,13 +6,15 @@
 
 import asyncio
 import sys
+import time
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "backend"))
 
 import memory  # noqa: E402
 
-TOPIC = "Smoke Test Topic"
+# Unique per run: Cognee Cloud rejects re-ingestion into a forgotten dataset name
+DATASET = f"smoke_test_{int(time.time())}"
 NOTES = (
     "The mitochondria is the powerhouse of the cell. It produces ATP through "
     "cellular respiration. The nucleus stores the cell's DNA. Ribosomes "
@@ -29,36 +31,36 @@ async def main():
     print("   connected")
 
     print("2. remember (ingest notes)")
-    status = await memory.ingest_notes(TOPIC, NOTES)
+    status = await memory.ingest_notes(DATASET, NOTES)
     print(f"   status: {status}")
 
     print("3. recall (ask)")
-    answer = await memory.ask(TOPIC, "What produces ATP in the cell?")
+    answer = await memory.ask(DATASET, "What produces ATP in the cell?")
     print(f"   answer: {answer[:200]}")
 
     print("4. quiz question generation")
-    question = await memory.quiz_question(TOPIC, avoid=[], weak_concepts=[])
+    question = await memory.quiz_question(DATASET, avoid=[], weak_concepts=[])
     print(f"   question: {question[:200]}")
 
     print("5. grade an answer")
-    graded = await memory.grade_answer(TOPIC, question, "I have no idea")
+    graded = await memory.grade_answer(DATASET, question, "I have no idea")
     print(f"   graded: {graded}")
 
     print("6. record QA in session memory")
-    await memory.record_qa(TOPIC, "smoke_session_1", question, "I have no idea",
+    await memory.record_qa(DATASET, "smoke_session_1", question, "I have no idea",
                            context=graded["explanation"], correct=graded["correct"])
     print("   recorded")
 
     print("7. improve (bridge session -> graph)")
-    result = await memory.adapt(TOPIC, "smoke_session_1")
+    result = await memory.adapt("smoke_session_1")
     print(f"   improve result: {str(result)[:200]}")
 
     print("8. graph visualization")
-    html = await memory.graph_html(TOPIC)
+    html = await memory.graph_html(DATASET)
     print(f"   graph html: {'OK, ' + str(len(html)) + ' bytes' if html else 'NOT AVAILABLE'}")
 
     print("9. forget (cleanup)")
-    result = await memory.wipe(TOPIC)
+    result = await memory.wipe(DATASET)
     print(f"   forget result: {str(result)[:200]}")
 
     await memory.disconnect()
