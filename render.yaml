@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: studymate
+    runtime: docker
+    plan: free
+    envVars:
+      - key: COGNEE_BASE_URL
+        sync: false
+      - key: COGNEE_API_KEY
+        sync: false
+      - key: STUDYMATE_MAX_TOPICS
+        value: "12"

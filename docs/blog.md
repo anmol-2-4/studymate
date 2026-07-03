@@ -70,7 +70,7 @@ text).
 
 Two harnesses ship in the repo, and both run against live Cognee Cloud: a
 smoke test that exercises the full lifecycle end-to-end in nine steps, and a
-Playwright script that drives the actual UI in headless Chrome — 14 checks,
+Playwright script that drives the actual UI in headless Chrome — 15 checks,
 including the one that matters: *does session 2 open with a targeting badge
 for the concept I missed in session 1, and does it disappear after I get it
 right?* It does, and watching that pass was the moment the project felt real.

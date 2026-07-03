@@ -49,7 +49,8 @@ it — and it remembers every session:
 | Conversational follow-ups | `recall(…, session_id=chat_session)` — session-aware retrieval |
 | Generate & grade quiz questions | `recall()` with task-specific `system_prompt`s (server-side LLM — no separate LLM key) |
 | Record every quiz answer | `remember(QAEntry(feedback_score=1..5), session_id=quiz_session)` — session memory |
-| Adapt to your weak spots | Cognee Cloud bridges session feedback into the permanent graph automatically; status via `GET /api/v1/sessions/{id}` |
+| Adapt to your weak spots | Cognee Cloud bridges session feedback into the permanent graph automatically; verified via `GET /api/v1/sessions/{id}` |
+| Prove the memory is real | Finishing a session renders a **memory receipt** — every graded answer read back live from the sessions API, with its cloud `qa_id` and feedback score |
 | Visualize your knowledge | `GET /api/v1/visualize?dataset_id=…` embedded in the app |
 | Wipe a topic | `forget(dataset=topic)` |
 
@@ -57,7 +58,8 @@ The adaptive loop is the point: wrong answers become low-score `QAEntry`
 feedback in session memory; Cognee Cloud bridges that feedback into the
 permanent graph in the background; the next quiz session is steered toward
 exactly the concepts you struggle with — and lets go of them once you answer
-correctly.
+correctly. And it's not just asserted: ending a session reads your answers
+back **from the cloud** and shows the receipt, cloud IDs and all.
 
 ## Architecture
 
@@ -91,6 +93,13 @@ cp .env.example .env   # add your Cognee Cloud tenant URL + API key
 Open http://localhost:8300 — create a topic, add notes (try
 `demo/operating-systems.md`), and start studying.
 
+### Deploying
+
+A `Dockerfile` and `render.yaml` are included — connect the repo on
+[Render](https://render.com) (or any Docker host), set `COGNEE_BASE_URL` and
+`COGNEE_API_KEY`, and it's live. `STUDYMATE_MAX_TOPICS` caps topic count on a
+shared demo instance.
+
 ## Testing
 
 Two harnesses, both run against the real Cognee Cloud:
@@ -105,8 +114,8 @@ Two harnesses, both run against the real Cognee Cloud:
 ```
 
 The UI test covers topic creation, ingestion, grounded Q&A with evidence, quiz
-grading, **adaptive targeting on a second session**, progress, graph, and
-forget — 14 checks.
+grading, the **live cloud memory receipt**, **adaptive targeting on a second
+session**, progress, graph, and forget — 15 checks.
 
 ## Stack
 

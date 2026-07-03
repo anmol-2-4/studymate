@@ -1,5 +1,6 @@
 """StudyMate — a tutor that remembers you. FastAPI backend on Cognee Cloud."""
 
+import os
 import uuid
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -69,11 +70,18 @@ async def topics():
     return store.list_topics()
 
 
+# Keeps a shared live demo from being flooded — unset locally, so no limit.
+MAX_TOPICS = int(os.getenv("STUDYMATE_MAX_TOPICS", "0"))
+
+
 @app.post("/api/topics")
 async def create_topic(body: TopicIn):
     name = body.name.strip()
     if not name:
         raise HTTPException(422, "Topic name is required")
+    if MAX_TOPICS and len(store.list_topics()) >= MAX_TOPICS:
+        raise HTTPException(429, "This shared demo is at its topic limit — "
+                                 "forget an old topic to make room")
     store.add_topic(name)
     return {"ok": True, "name": name}
 
@@ -163,12 +171,28 @@ def _asked_questions(name: str, session_id: str, question: str) -> list[str]:
 @app.post("/api/topics/{name}/quiz/finish")
 async def quiz_finish(name: str, body: SessionIn):
     _dataset(name)
-    await memory.adapt(body.session_id)
+    cloud = await memory.adapt(body.session_id)
     store.mark_adapted(name, body.session_id)
     _session_questions.pop(body.session_id, None)
     topic = store.get_topic(name)
     session = next((s for s in topic["sessions"] if s["id"] == body.session_id), {})
-    return {"ok": True, "session": session, "weak_concepts": store.weak_concepts(name)}
+    # Live receipt from the Cognee Cloud sessions API — proves every graded
+    # answer is really sitting in cloud session memory awaiting bridging.
+    qas = cloud.get("qas") or []
+    receipt = {
+        "cloud_status": cloud.get("status"),
+        "recorded": len(qas),
+        "entries": [
+            {
+                "question": (qa.get("question") or "")[:100],
+                "score": qa.get("feedback_score"),
+                "qa_id": qa.get("qa_id"),
+            }
+            for qa in qas
+        ],
+    }
+    return {"ok": True, "session": session,
+            "weak_concepts": store.weak_concepts(name), "receipt": receipt}
 
 
 @app.get("/api/topics/{name}/progress")

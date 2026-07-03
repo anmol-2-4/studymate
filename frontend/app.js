@@ -305,6 +305,38 @@ $("quiz-answer").addEventListener("keydown", (e) => {
   if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) $("btn-quiz-submit").click();
 });
 
+// The memory receipt is read back live from the Cognee Cloud sessions API —
+// it shows each graded answer really stored in cloud session memory (score
+// 1/5 = weak spot flagged for bridging, 5/5 = mastered) with its cloud qa_id.
+function renderReceipt(container, receipt) {
+  if (!receipt || !receipt.recorded) return;
+  const box = document.createElement("div");
+  box.className = "receipt";
+  const rows = receipt.entries.map((e) => {
+    const row = document.createElement("div");
+    row.className = "receipt-row";
+    const score = document.createElement("span");
+    score.className = `receipt-score ${e.score >= 4 ? "good" : "bad"}`;
+    score.textContent = `${e.score}/5`;
+    const q = document.createElement("span");
+    q.className = "receipt-q";
+    q.textContent = e.question;
+    const id = document.createElement("span");
+    id.className = "receipt-id";
+    id.textContent = e.qa_id ? e.qa_id.slice(0, 8) : "";
+    row.append(score, q, id);
+    return row;
+  });
+  const head = document.createElement("div");
+  head.className = "receipt-head";
+  head.textContent =
+    `Cognee Cloud memory receipt — ${receipt.recorded} answer` +
+    `${receipt.recorded === 1 ? "" : "s"} in session memory, ` +
+    `read back live from the sessions API`;
+  box.append(head, ...rows);
+  container.appendChild(box);
+}
+
 $("btn-quiz-end").onclick = async () => {
   if (!quizSession) return;
   const button = $("btn-quiz-end");
@@ -321,11 +353,10 @@ $("btn-quiz-end").onclick = async () => {
     $("quiz-summary").innerHTML =
       `<strong>Session complete 🧠</strong><br>` +
       `Score: ${s.correct} correct · ${s.wrong} wrong<br>` +
-      `Your answers were recorded as graded feedback in session memory — ` +
-      `Cognee Cloud is bridging them into your permanent knowledge graph.<br>` +
       (data.weak_concepts.length
         ? `Next session will target: <strong>${data.weak_concepts.join(", ")}</strong>`
         : `No weak spots on record — nice work!`);
+    renderReceipt($("quiz-summary"), data.receipt);
     quizSession = null;
     refreshTopics();
   } catch (err) { toast(err.message); }

@@ -32,8 +32,10 @@ store (delete `data/store.json` and forget old topics first).
 - Start quiz. Answer the first question wrong ("no idea").
 - Show the red feedback card with the correct explanation.
 - Answer one more (wrong or right), then **Finish session & adapt**.
-- Read the summary line: "…every answer was recorded as scored feedback in
-  session memory, and Cognee Cloud is bridging it into my permanent graph."
+- Point at the **memory receipt** under the summary: "This isn't a claim —
+  the app just read my answers back from Cognee Cloud's sessions API. Score
+  1 out of 5 on the one I missed, with its cloud ID. My weak spot is now
+  literally in the graph's memory."
 
 ## 1:50 — The climax: it remembers you
 

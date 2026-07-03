@@ -23,7 +23,7 @@ session opens by attacking your tracked weak spots, and lets go of a concept
 once you answer it correctly. Progress, session history, an embedded
 interactive view of your actual knowledge graph, and a one-click `forget`
 complete the memory lifecycle. Ships with two test harnesses that run against
-live Cognee Cloud, including a 14-check browser end-to-end suite.
+live Cognee Cloud, including a 15-check browser end-to-end suite.
 
 ## Links
 

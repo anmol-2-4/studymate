@@ -457,6 +457,38 @@ button.danger:hover { background: rgba(214, 69, 69, 0.06); }
   color: var(--ballpoint);
 }
 
+/* the memory receipt — graded answers read back live from Cognee Cloud */
+.receipt {
+  margin-top: 14px;
+  border-top: 1px dashed var(--rule);
+  padding-top: 12px;
+  font-family: var(--mono);
+  font-size: 12px;
+}
+.receipt-head {
+  color: var(--ink-soft);
+  margin-bottom: 8px;
+  letter-spacing: 0.02em;
+}
+.receipt-row {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 3px 0;
+}
+.receipt-score { flex: none; font-weight: 600; }
+.receipt-score.good { color: var(--green); }
+.receipt-score.bad { color: var(--red); }
+.receipt-q {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--ink);
+}
+.receipt-id { flex: none; color: var(--ink-soft); opacity: 0.7; }
+
 /* ---------- progress: the scorecard ---------- */
 
 #progress-cards { display: flex; gap: 12px; margin-bottom: 26px; flex-wrap: wrap; }

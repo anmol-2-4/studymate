@@ -1,8 +1,9 @@
 """Browser end-to-end test: drives the full StudyMate flow in headless Chrome.
 
 Covers: topic creation, notes ingestion, grounded Q&A with evidence, a full
-quiz session (wrong + right answers), adaptive targeting on a second session,
-progress view, graph view, and topic forget.
+quiz session (wrong + right answers), the cloud memory receipt on finish,
+adaptive targeting on a second session, progress view, graph view, and topic
+forget.
 
 Requires the app running (default http://localhost:8300) and:
     pip install playwright   # uses system Chrome, no browser download needed
@@ -82,6 +83,10 @@ with sync_playwright() as p:
     page.click("#btn-quiz-end")
     page.wait_for_selector("#quiz-summary:not(.hidden)", timeout=180000)
     check("session summary shown", "Session complete" in page.text_content("#quiz-summary"))
+    receipt_row = page.query_selector("#quiz-summary .receipt-row")
+    check("cloud memory receipt rendered",
+          receipt_row is not None and "1/5" in page.text_content("#quiz-summary .receipt"),
+          (receipt_row.text_content()[:100] if receipt_row else "no receipt"))
     check("start button reachable after finish", page.is_visible("#btn-quiz-start"))
 
     page.click("#btn-quiz-start")
