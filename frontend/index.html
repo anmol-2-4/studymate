@@ -5,15 +5,26 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>StudyMate — a tutor that remembers you</title>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧠</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <aside id="sidebar">
     <div class="brand">
-      <span class="logo">🧠</span>
+      <span class="logo" aria-hidden="true">
+        <svg width="34" height="34" viewBox="0 0 34 34" fill="none">
+          <path d="M8 24 L17 9 L26 22 L17 17 Z" stroke="#2B59C3" stroke-width="1.6" stroke-linejoin="round"/>
+          <circle cx="8" cy="24" r="3.2" fill="#FFE45C" stroke="#17263B" stroke-width="1.4"/>
+          <circle cx="17" cy="9" r="3.2" fill="#FFFFFF" stroke="#17263B" stroke-width="1.4"/>
+          <circle cx="26" cy="22" r="3.2" fill="#FFFFFF" stroke="#17263B" stroke-width="1.4"/>
+          <circle cx="17" cy="17" r="2.2" fill="#2B59C3"/>
+        </svg>
+      </span>
       <div>
         <h1>StudyMate</h1>
-        <p class="tagline">a tutor that remembers you</p>
+        <p class="tagline">a tutor that <span class="hl">remembers you</span></p>
       </div>
     </div>
 
@@ -26,42 +37,45 @@
 
     <footer>
       <span id="conn-status" class="conn conn-unknown">checking…</span>
-      <span>powered by Cognee Cloud</span>
+      <span>Cognee Cloud</span>
     </footer>
   </aside>
 
   <main id="main">
     <div id="empty-state">
-      <h2>🧠 Welcome to StudyMate</h2>
-      <p>Create a topic on the left, paste in your notes, and StudyMate builds a
-         knowledge graph of what <em>you</em> are studying.</p>
-      <p>Then ask it questions, take adaptive quizzes, and watch it learn where
-         you struggle — it remembers across every session.</p>
+      <h2>Your notes. Your weak spots.<br>A tutor that <span class="hl">remembers</span>.</h2>
+      <p>StudyMate turns your own study material into a knowledge graph, quizzes
+         you from it, and carries what it learns about you across every session.</p>
+      <ol>
+        <li>Create a topic and add your notes — paste text or upload a file</li>
+        <li>Ask questions and take quizzes, graded against your material</li>
+        <li>Come back — the next session opens on what you got wrong</li>
+      </ol>
     </div>
 
     <div id="workspace" class="hidden">
       <header id="topic-header">
         <h2 id="topic-title"></h2>
-        <button id="btn-forget" class="danger" title="Erase this topic's memory (Cognee forget)">Forget topic</button>
+        <button id="btn-forget" class="danger" title="Erase this topic's memory permanently">Forget topic</button>
       </header>
 
       <nav id="tabs">
-        <button class="tab active" data-tab="notes">📝 Notes</button>
-        <button class="tab" data-tab="ask">💬 Ask</button>
-        <button class="tab" data-tab="quiz">🎯 Quiz</button>
-        <button class="tab" data-tab="progress">📈 Progress</button>
-        <button class="tab" data-tab="graph">🕸️ Graph</button>
+        <button class="tab active" data-tab="notes">Notes</button>
+        <button class="tab" data-tab="ask">Ask</button>
+        <button class="tab" data-tab="quiz">Quiz</button>
+        <button class="tab" data-tab="progress">Progress</button>
+        <button class="tab" data-tab="graph">Graph</button>
       </nav>
 
       <!-- NOTES -->
       <section id="tab-notes" class="tab-panel">
         <p class="hint">Paste lecture notes, textbook excerpts, or anything you're studying.
-           StudyMate ingests it into permanent graph memory (<code>remember</code>).</p>
+           StudyMate stores it as permanent graph memory (<code>remember</code>).</p>
         <textarea id="notes-input" placeholder="Paste your study material here…"></textarea>
         <div class="row">
           <button id="btn-save-notes" class="primary">Remember this</button>
           <label id="upload-label" class="upload">
-            📄 Upload file
+            Upload file
             <input id="file-input" type="file" accept=".pdf,.txt,.md,.csv,.json" hidden>
           </label>
           <span id="notes-status" class="status"></span>
@@ -82,8 +96,8 @@
       <section id="tab-quiz" class="tab-panel hidden">
         <div id="quiz-idle">
           <p class="hint">StudyMate quizzes you from <em>your own notes</em> and remembers every
-             answer. Wrong answers are fed back into the graph (<code>improve</code>) so the next
-             session targets your weak spots.</p>
+             answer. Wrong answers become scored feedback (<code>QAEntry</code>) that reshapes
+             the graph — the next session opens on your weak spots.</p>
           <button id="btn-quiz-start" class="primary">Start quiz session</button>
         </div>
         <div id="quiz-active" class="hidden">
@@ -91,7 +105,7 @@
             <span id="quiz-qnum" class="badge"></span>
             <p id="quiz-question"></p>
           </div>
-          <textarea id="quiz-answer" placeholder="Your answer…" rows="3"></textarea>
+          <textarea id="quiz-answer" placeholder="Your answer… (Ctrl+Enter to submit)" rows="3"></textarea>
           <div class="row">
             <button id="btn-quiz-submit" class="primary">Submit answer</button>
             <button id="btn-quiz-end">Finish session &amp; adapt</button>
@@ -112,7 +126,7 @@
 
       <!-- GRAPH -->
       <section id="tab-graph" class="tab-panel hidden">
-        <p class="hint">This is the actual knowledge graph Cognee built from your notes.</p>
+        <p class="hint">The actual knowledge graph Cognee built from your notes.</p>
         <button id="btn-graph-load" class="primary">Load graph</button>
         <iframe id="graph-frame" class="hidden" title="Knowledge graph"></iframe>
       </section>

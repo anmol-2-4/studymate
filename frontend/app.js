@@ -44,7 +44,7 @@ async function refreshStatus() {
   try {
     const { connected } = await api("/status");
     el.className = `conn ${connected ? "conn-ok" : "conn-bad"}`;
-    el.textContent = connected ? "cloud connected" : "no cloud key";
+    el.textContent = connected ? "connected" : "no API key";
   } catch {
     el.className = "conn conn-bad";
     el.textContent = "backend down";
@@ -57,15 +57,22 @@ async function refreshTopics() {
   const topics = await api("/topics");
   const list = $("topic-list");
   list.innerHTML = "";
+  if (topics.length) {
+    const label = document.createElement("div");
+    label.className = "contents-label";
+    label.textContent = "Contents";
+    list.appendChild(label);
+  }
   for (const topic of topics) {
     const item = document.createElement("div");
     item.className = `topic-item${topic.name === currentTopic ? " active" : ""}`;
+    const pct = topic.mastery === null ? "—" : `${topic.mastery}%`;
     const mastery = topic.mastery === null ? "" :
       `<div class="mastery-bar"><div style="width:${topic.mastery}%"></div></div>`;
     item.innerHTML = `
-      <div class="t-name"></div>
-      <div class="t-meta">${topic.notes} notes · ${topic.sessions} sessions` +
-      `${topic.mastery === null ? "" : ` · ${topic.mastery}% mastery`}</div>${mastery}`;
+      <div class="t-line"><span class="t-name"></span><span class="t-leader"></span>` +
+      `<span class="t-pct">${pct}</span></div>
+      <div class="t-meta">${topic.notes} notes · ${topic.sessions} sessions</div>${mastery}`;
     item.querySelector(".t-name").textContent = topic.name;
     item.onclick = () => selectTopic(topic.name);
     list.appendChild(item);
@@ -240,7 +247,7 @@ function showQuestion(question, targeting) {
   currentQuestion = question;
   $("quiz-qnum").textContent = `Question ${questionNumber}`;
   const target = targeting && targeting.length
-    ? `<span class="badge target">🎯 targeting: ${targeting.join(", ")}</span>` : "";
+    ? `<span class="badge target">targeting: ${targeting.join(", ")}</span>` : "";
   $("quiz-qnum").insertAdjacentHTML("afterend", "");
   document.querySelectorAll(".badge.target").forEach((b) => b.remove());
   if (target) $("quiz-qnum").insertAdjacentHTML("afterend", target);
@@ -260,7 +267,7 @@ $("btn-quiz-start").onclick = async () => {
     $("quiz-active").classList.remove("hidden");
     $("quiz-summary").classList.add("hidden");
     showQuestion(data.question, data.targeting);
-    if (data.targeting.length) toast(`🎯 This session targets your weak spots: ${data.targeting.join(", ")}`);
+    if (data.targeting.length) toast(`This session targets your weak spots: ${data.targeting.join(", ")}`);
   } catch (err) { toast(err.message); }
   finally { busy(button, false, "Start quiz session"); }
 };
