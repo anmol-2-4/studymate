@@ -5,6 +5,7 @@ Session-> Cognee session      (QAEntry per quiz answer)
 Adapt  -> improve(session_ids)(feedback weights bridge into the graph)
 """
 
+import io
 import os
 import re
 import json
@@ -50,6 +51,22 @@ def is_connected() -> bool:
 
 # ---------- remember ----------
 
+class _NamedBytesIO(io.BytesIO):
+    """BytesIO carrying a filename so the cloud client uploads it correctly."""
+
+    def __init__(self, data: bytes, name: str):
+        super().__init__(data)
+        self.name = name
+
+
+async def ingest_file(topic: str, filename: str, content: bytes):
+    fileobj = _NamedBytesIO(content, filename)
+    result = await cognee.remember(fileobj, dataset_name=dataset_for(topic))
+    if isinstance(result, dict):
+        return result.get("status", "ok")
+    return getattr(result, "status", "ok")
+
+
 async def ingest_notes(topic: str, text: str):
     result = await cognee.remember(text, dataset_name=dataset_for(topic))
     if isinstance(result, dict):
@@ -70,20 +87,32 @@ def _entry_text(entry) -> str:
 
 
 async def _recall_text(topic: str, query: str, system_prompt: str | None = None,
-                       session_id: str | None = None) -> str:
+                       session_id: str | None = None,
+                       include_references: bool = False) -> str:
     results = await cognee.recall(
         query,
         datasets=[dataset_for(topic)],
         top_k=10,
         session_id=session_id,
         system_prompt=system_prompt,
+        include_references=include_references,
     )
     parts = [_entry_text(r) for r in results]
     return "\n".join(p for p in parts if p).strip()
 
 
+ASK_PROMPT = (
+    "You are StudyMate, a friendly tutor. Answer the student's question using "
+    "the provided context from their own study notes. Be concise and clear. "
+    "Use plain sentences and simple dash lists only — no markdown tables, "
+    "headings, or bold markers."
+)
+
+
 async def ask(topic: str, question: str, session_id: str | None = None) -> str:
-    answer = await _recall_text(topic, question, session_id=session_id)
+    answer = await _recall_text(topic, question, session_id=session_id,
+                                system_prompt=ASK_PROMPT,
+                                include_references=True)
     return answer or "I couldn't find anything about that in your notes yet."
 
 

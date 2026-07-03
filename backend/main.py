@@ -4,7 +4,7 @@ import uuid
 from contextlib import asynccontextmanager
 from pathlib import Path
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, UploadFile
 from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
@@ -35,6 +35,7 @@ class NotesIn(BaseModel):
 
 class AskIn(BaseModel):
     question: str
+    session_id: str | None = None
 
 
 class AnswerIn(BaseModel):
@@ -90,8 +91,27 @@ async def add_notes(name: str, body: NotesIn):
 async def ask(name: str, body: AskIn):
     if not store.get_topic(name):
         raise HTTPException(404, "No such topic")
-    answer = await memory.ask(name, body.question)
+    answer = await memory.ask(name, body.question, session_id=body.session_id)
     return {"answer": answer}
+
+
+ALLOWED_UPLOADS = {".pdf", ".txt", ".md", ".csv", ".json"}
+
+
+@app.post("/api/topics/{name}/upload")
+async def upload_notes(name: str, file: UploadFile):
+    if not store.get_topic(name):
+        raise HTTPException(404, "No such topic")
+    suffix = ("." + file.filename.rsplit(".", 1)[-1].lower()) if "." in file.filename else ""
+    if suffix not in ALLOWED_UPLOADS:
+        raise HTTPException(422, f"Unsupported file type {suffix or '(none)'} — "
+                                 f"use {', '.join(sorted(ALLOWED_UPLOADS))}")
+    content = await file.read()
+    if not content:
+        raise HTTPException(422, "File is empty")
+    status = await memory.ingest_file(name, file.filename, content)
+    store.bump_notes(name)
+    return {"ok": True, "status": str(status), "filename": file.filename}
 
 
 @app.post("/api/topics/{name}/quiz/start")

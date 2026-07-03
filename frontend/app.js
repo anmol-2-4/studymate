@@ -3,6 +3,14 @@ const $ = (id) => document.getElementById(id);
 let currentTopic = null;
 let quizSession = null;
 let currentQuestion = null;
+const chatSessions = {};
+
+function chatSessionFor(topic) {
+  if (!chatSessions[topic]) {
+    chatSessions[topic] = `chat_${topic.toLowerCase().replace(/[^a-z0-9]+/g, "_")}_${Date.now()}`;
+  }
+  return chatSessions[topic];
+}
 
 async function api(path, options = {}) {
   const response = await fetch(`/api${path}`, {
@@ -138,6 +146,30 @@ $("btn-save-notes").onclick = async () => {
   } finally { busy(button, false); }
 };
 
+$("upload-label").onclick = () => $("file-input").click();
+$("file-input").onchange = async () => {
+  const file = $("file-input").files[0];
+  if (!file) return;
+  $("notes-status").textContent = `Uploading ${file.name} & building graph… (this can take a minute)`;
+  const form = new FormData();
+  form.append("file", file);
+  try {
+    const response = await fetch(`/api/topics/${encodeURIComponent(currentTopic)}/upload`, {
+      method: "POST", body: form,
+    });
+    if (!response.ok) throw new Error((await response.json()).detail || "Upload failed");
+    const log = document.createElement("div");
+    log.textContent = `✅ Remembered ${file.name} — ${new Date().toLocaleTimeString()}`;
+    $("notes-log").prepend(log);
+    $("notes-status").textContent = "";
+    toast(`🧠 ${file.name} stored in permanent graph memory`);
+    refreshTopics();
+  } catch (err) {
+    $("notes-status").textContent = "";
+    toast(err.message);
+  } finally { $("file-input").value = ""; }
+};
+
 /* ---------- ask ---------- */
 
 function addMessage(kind, text) {
@@ -149,6 +181,26 @@ function addMessage(kind, text) {
   return msg;
 }
 
+// Cognee's include_references appends a deterministic "Evidence:" block citing
+// the exact note chunks the answer came from — render it as a collapsible.
+function renderAnswer(el, answer) {
+  answer = answer.replace(/\*\*/g, "").replace(/^#+\s/gm, "");
+  const idx = answer.indexOf("\nEvidence:");
+  if (idx === -1) {
+    el.textContent = answer;
+    return;
+  }
+  el.textContent = answer.slice(0, idx).trim();
+  const details = document.createElement("details");
+  details.className = "evidence";
+  const summary = document.createElement("summary");
+  summary.textContent = "📎 evidence from your notes";
+  const body = document.createElement("div");
+  body.textContent = answer.slice(idx + "\nEvidence:".length).trim();
+  details.append(summary, body);
+  el.appendChild(details);
+}
+
 $("btn-ask").onclick = async () => {
   const input = $("ask-input");
   const question = input.value.trim();
@@ -158,10 +210,11 @@ $("btn-ask").onclick = async () => {
   const thinking = addMessage("bot thinking", "recalling…");
   try {
     const { answer } = await api(`/topics/${encodeURIComponent(currentTopic)}/ask`, {
-      method: "POST", body: JSON.stringify({ question }),
+      method: "POST",
+      body: JSON.stringify({ question, session_id: chatSessionFor(currentTopic) }),
     });
     thinking.className = "msg bot";
-    thinking.textContent = answer;
+    renderAnswer(thinking, answer);
   } catch (err) {
     thinking.className = "msg bot";
     thinking.textContent = `⚠️ ${err.message}`;
@@ -240,6 +293,10 @@ $("btn-quiz-submit").onclick = async () => {
     toast(err.message);
   } finally { busy(button, false, "Submit answer"); }
 };
+
+$("quiz-answer").addEventListener("keydown", (e) => {
+  if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) $("btn-quiz-submit").click();
+});
 
 $("btn-quiz-end").onclick = async () => {
   if (!quizSession) return;
