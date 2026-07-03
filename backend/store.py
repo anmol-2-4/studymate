@@ -5,6 +5,7 @@ needs instantly (scores, session history, weak concepts).
 """
 
 import json
+import os
 import re
 import threading
 import uuid
@@ -12,12 +13,20 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 DATA_FILE = Path(__file__).resolve().parent.parent / "data" / "store.json"
+# On ephemeral hosts (Render free tier) the data dir resets on every deploy;
+# with STUDYMATE_SEED=1 a fresh container starts from the demo topic instead
+# of an empty sidebar. The seeded datasets live permanently in Cognee Cloud.
+SEED_FILE = Path(__file__).resolve().parent.parent / "demo" / "seed-store.json"
 _lock = threading.Lock()
 
 
 def _load() -> dict:
     if DATA_FILE.exists():
         return json.loads(DATA_FILE.read_text())
+    if os.getenv("STUDYMATE_SEED") and SEED_FILE.exists():
+        state = json.loads(SEED_FILE.read_text())
+        _save(state)
+        return state
     return {"topics": {}}
 
 

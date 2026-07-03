@@ -1,0 +1,25 @@
+{
+  "topics": {
+    "Operating Systems": {
+      "created": "2026-07-03T19:21:50.628469+00:00",
+      "notes": 1,
+      "sessions": [
+        {
+          "id": "quiz_a91aa3091c9f",
+          "started": "2026-07-03T19:22:26.188716+00:00",
+          "correct": 0,
+          "wrong": 1,
+          "adapted": true
+        }
+      ],
+      "missed": [
+        {
+          "question": "What are the four Coffman conditions that must all hold for a deadlock to occur?",
+          "concept": "Coffman conditions",
+          "at": "2026-07-03T19:22:41.537948+00:00"
+        }
+      ],
+      "dataset": "studymate_operating_systems_c4f4c8"
+    }
+  }
+}

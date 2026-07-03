@@ -10,3 +10,5 @@ services:
         sync: false
       - key: STUDYMATE_MAX_TOPICS
         value: "12"
+      - key: STUDYMATE_SEED
+        value: "1"
