@@ -28,12 +28,12 @@ live Cognee Cloud, including a 16-check browser end-to-end suite.
 ## Links
 
 - Repo: https://github.com/anmol-2-4/studymate
+- Demo video: https://youtu.be/klpzYBrldos
 - Live demo: https://zshops-slight-list-cons.trycloudflare.com
   _(quick tunnel from the dev machine — **keep the laptop awake and the tunnel
   running through judging**; if it drops, restart with
   `~/.local/bin/cloudflared tunnel --url http://localhost:8300`, then update
   this URL and the README)_
-- Demo video: _(add after recording)_
 - Blog post: _(add after publishing docs/blog.md)_
 
 ## Form reminders
@@ -79,4 +79,4 @@ Found while building StudyMate for The Hangover Part AI hackathon.
 > Real memory, not a prompt trick: wrong answers become scored feedback that
 > reshapes the graph (Cognee Cloud bridges it in the background).
 >
-> [demo clip] — repo: github.com/anmol-2-4/studymate #TheHangoverPartAI
+> Demo: youtu.be/klpzYBrldos — repo: github.com/anmol-2-4/studymate #TheHangoverPartAI
