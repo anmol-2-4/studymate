@@ -6,6 +6,11 @@ Built on **[Cognee Cloud](https://www.cognee.ai/)** for the WeMakeDevs × Cognee
 hackathon *"The Hangover Part AI: Where's My Context?"* — **Best Build on Cognee
 Cloud** track.
 
+**🔴 Try it live:** https://zshops-slight-list-cons.trycloudflare.com — already
+loaded with an Operating Systems topic that has a weak spot on record. Open
+**Quiz → Start quiz session** and watch it remember. *(If the link is down,
+the 3-minute local setup below gets you the same thing.)*
+
 ![Adaptive quiz](docs/screenshots/quiz.png)
 
 ## The problem
