@@ -8,10 +8,7 @@ Cloud** track.
 
 **▶️ 3-minute demo:** https://youtu.be/pAkjaWQW7d4
 
-**🔴 Try it live:** https://zshops-slight-list-cons.trycloudflare.com — already
-loaded with an Operating Systems topic that has a weak spot on record. Open
-**Quiz → Start quiz session** and watch it remember. *(If the link is down,
-the 3-minute local setup below gets you the same thing.)*
+Runs locally in 3 minutes — see [Running it locally](#running-it-locally) below.
 
 ![Adaptive quiz](docs/screenshots/quiz.png)
 

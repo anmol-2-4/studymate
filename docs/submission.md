@@ -49,11 +49,7 @@ each Cognee call lives in the code."
 
 - Repo: https://github.com/anmol-2-4/studymate
 - Demo video: https://youtu.be/pAkjaWQW7d4
-- Live demo: https://zshops-slight-list-cons.trycloudflare.com
-  _(quick tunnel from the dev machine — **keep the laptop awake and the tunnel
-  running through judging**; if it drops, restart with
-  `~/.local/bin/cloudflared tunnel --url http://localhost:8300`, then update
-  this URL and the README)_
+- Deployed link: _(leave blank — runs locally; see README "Running it locally")_
 - Blog post: _(add after publishing docs/blog.md)_
 
 ## Form reminders
