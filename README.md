@@ -86,6 +86,11 @@ Every memory operation goes through one file:
 | `wipe()` | `cognee.forget(dataset=…)` |
 | `graph_html()` | `GET /api/v1/visualize?dataset_id=…` — the interactive graph in the Graph tab |
 
+StudyMate is built on the **new Cognee 1.0 memory lifecycle —
+`remember` / `recall` / `forget` plus session memory and `QAEntry` feedback
+bridging — not the older add/cognify/search flow.** That means it exercises the
+write-and-adapt path, not just read-only ingest-and-query.
+
 The graph architecture in one paragraph: **each topic is its own Cognee
 dataset**, so its notes become an isolated knowledge graph (entities +
 relationships extracted by Cognee from your material). **Each quiz is a Cognee

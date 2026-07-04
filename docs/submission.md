@@ -25,6 +25,26 @@ interactive view of your actual knowledge graph, and a one-click `forget`
 complete the memory lifecycle. Ships with two test harnesses that run against
 live Cognee Cloud, including a 16-check browser end-to-end suite.
 
+## Describe how you have used Cognee (form field)
+
+Every memory operation goes through the Cognee Cloud SDK (`cognee.serve` routes
+all calls to the cloud). Crucially, StudyMate is built on the **new Cognee 1.0
+memory lifecycle — `remember` / `recall` / `forget` plus session memory and
+`QAEntry` feedback bridging — not the older add/cognify/search flow.**
+`remember()` ingests each topic's notes/files into its own dataset, so each
+topic becomes an isolated knowledge graph. `recall()` powers grounded Q&A (with
+`include_references=True` for exact-chunk citations and `session_id` for
+conversational follow-ups) and also generates and grades quiz questions via
+task-specific system prompts. Each quiz is a Cognee session: every graded
+answer is written back with `remember(QAEntry(feedback_score=1..5))` — 1 for a
+missed concept, 5 for mastered — which is the signal Cognee Cloud bridges into
+the permanent graph, so the next session adapts to your weak spots. Finishing a
+session reads those answers back from `GET /api/v1/sessions/{id}` and shows a
+live "memory receipt" with each cloud `qa_id`, proving the memory is real, not
+asserted. The Graph tab embeds Cognee's `/visualize` output, and `forget()`
+wipes a topic. The full call-by-call mapping is in the repo README under "Where
+each Cognee call lives in the code."
+
 ## Links
 
 - Repo: https://github.com/anmol-2-4/studymate
